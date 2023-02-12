@@ -4,6 +4,7 @@ import psycopg2 as db_driver
 
 db_conn: connection = None
 
+# Init functions
 def init_connection() -> None:
 	global db_conn
 	db_conn = db_driver.connect(
@@ -28,6 +29,20 @@ def teardown_connection() -> None:
 	db_conn.close()
 	print("Conexion cerrada correctamente")
 
+def populate_sports() -> None:
+	global db_conn
+	with db_conn.cursor() as cursor:
+		cursor.execute("SELECT * FROM public.clients ORDER BY nid ASC")
+		if len(cursor.fetchall()):
+			return # Return if sports is already populated
+		print("Inicializando deportes...")
+		for sport, price in avail_sports.items():
+			cursor.execute("INSERT INTO public.sports(name, price) VALUES (%s, %s);",
+			(sport, price))
+			print(sport, price)
+		cursor.close()
+
+# Exposed functions
 def add_client(client: Client) -> None:
 	global db_conn
 	with db_conn.cursor() as cursor:

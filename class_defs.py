@@ -22,3 +22,13 @@ class Sports:
         super().__init__()
         self.name = name
         self.price_per_hour = price_per_hour
+
+
+import random
+avail_sports: dict = {
+    "Tenis": random.randrange(10, 50, 5),
+    "Natacion": random.randrange(10, 50, 5),
+    "Atletismo": random.randrange(10, 50, 5),
+    "Baloncesto": random.randrange(10, 50, 5),
+    "Futbol": random.randrange(10, 50, 5),
+}
