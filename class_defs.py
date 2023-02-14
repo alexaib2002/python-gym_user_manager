@@ -1,5 +1,8 @@
+import random
+
+
 class Client:
-    translated_attrs = ["DNI", "Nombre", "Fecha de nacimiento", "Telefono",]
+    translated_attrs = ["DNI", "Nombre", "Fecha de nacimiento", "Telefono", ]
 
     def __init__(self, nid: str, name: str, birth_date: str, phone: int) -> None:
         super().__init__()
@@ -10,7 +13,10 @@ class Client:
 
     def print_data_pretty(self) -> None:
         print("********************************")
-        print(f"Name:\t{self.name}\nId:\t{self.id}\nBirth Date:\t{self.birth_date}\nPhone:\t{self.phone}".expandtabs(20))
+        print(
+            f"Name:\t{self.name}\nId:\t{self.id}\n"
+            f"Birth Date:\t{self.birth_date}\n"
+            f"Phone:\t{self.phone}".expandtabs(20))
         print("********************************")
 
     def print_sports_pricing(self) -> None:
@@ -24,7 +30,6 @@ class Sports:
         self.price_per_hour = price_per_hour
 
 
-import random
 avail_sports: dict = {
     "Tenis": random.randrange(10, 50, 5),
     "Natacion": random.randrange(10, 50, 5),
