@@ -29,7 +29,8 @@ def prompt_show_client() -> None:
 def prompt_add_client_to_sport() -> None:
     name: str = input("Introduce el ID del cliente >> ")
     sport: str = input("Introduce el nombre del deporte >> ")
-    DB.add_client_to_sport(name, sport)
+    time: str = input("Introduce el horario >> ")
+    DB.add_client_to_sport(name, sport, time)
 
 
 def prompt_del_client_from_sport() -> None:

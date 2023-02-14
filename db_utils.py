@@ -66,13 +66,14 @@ def add_client(client: Client) -> None:
         cursor.close()
 
 
-def del_client(id: str) -> None:
+def del_client(nid: str) -> None:
     global db_conn
     with db_conn.cursor() as cursor:
         cursor.execute(
             "DELETE FROM public.clients WHERE nid LIKE %s;",
-            (id))
+            (nid,))
         cursor.close()
+    print("Cliente eliminado correctamente")
 
 
 def show_client(id: str = "") -> None:
@@ -86,34 +87,34 @@ def show_client(id: str = "") -> None:
             Client(*row).print_data_pretty()
 
 
-def add_client_to_sport(id: str, sport_name: str, sport_time: str) -> None:
+def add_client_to_sport(nid: str, sport_name: str, sport_time: str) -> None:
     global db_conn
     try:
         with db_conn.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO public.clients_sports(client_nid, sport_name, sport_time) VALUES (%s, %s, %s);", (id, sport_name, sport_time))
+                "INSERT INTO public.clients_sports(client_nid, sport_name, sport_time) VALUES (%s, %s, %s);", (nid, sport_name, sport_time))
             cursor.close()
     except db_errors.ForeignKeyViolation:
         print("El deporte/cliente no existe en su respectiva tabla", file=sys.stderr)
 
 
-def del_client_from_sport(id: str, sport_name: str) -> None:
+def del_client_from_sport(nid: str, sport_name: str) -> None:
     global db_conn
     try:
         with db_conn.cursor() as cursor:
             cursor.execute(
                 "DELETE FROM public.clients_sports WHERE client_nid LIKE %s AND sport_name LIKE %s;",
-                (id, sport_name))
+                (nid, sport_name))
             cursor.close()
     except db_errors.ForeignKeyViolation:
         print("El deporte/cliente no existe en su respectiva tabla", file=sys.stderr)
 
 
-def show_client_sports(id: str) -> None:
+def show_client_sports(nid: str) -> None:
     global db_conn
     with db_conn.cursor() as cursor:
         cursor.execute(
-            "SELECT sport_name, sport_time FROM public.clients_sports WHERE client_nid LIKE %s", (id,))
+            "SELECT sport_name, sport_time FROM public.clients_sports WHERE client_nid LIKE %s", (nid,))
         res = cursor.fetchall()
         for row in res:
             for cell in row:
