@@ -12,6 +12,7 @@ menu_str = """
 7. Salir
 """
 
+
 def menu() -> None:
     prompting = True
     reminder: str = ""
@@ -23,7 +24,7 @@ def menu() -> None:
             reminder = ""
             opt: int = int(input(f"{menu_str}\n>> "))
             if opt == len(UserPrompt) + 1: prompting = False
-            if opt in range(0, len(UserPrompt)):
+            if opt in range(1, len(UserPrompt) + 1):
                 prompt_base(UserPrompt[opt - 1])
             else: reminder = "Debes introducir una opcion entre 1 y 7"
         except ValueError:
