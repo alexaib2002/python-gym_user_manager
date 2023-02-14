@@ -3,12 +3,32 @@ import sys
 from class_defs import *
 from psycopg2.extensions import connection
 import psycopg2 as db_driver
-import psycopg2.errors as db_errors
+from psycopg2.errors import DuplicateDatabase, ForeignKeyViolation
 
 db_conn: connection = None
 
 
 # Init functions
+def init_db(sql_script: str) -> None:
+	print("Inicializando BBDD en el servidor...")
+	from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+	init_conn: connection = db_driver.connect(
+		host="localhost",
+        user="postgres",
+        password="admin123",
+        port="25432",
+	)
+	init_conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+	try:
+		with init_conn.cursor() as cursor:
+			cursor.execute(sql_script)
+			cursor.close()
+		print("Script de inicialización de la BBDD ejecutado con éxito")
+	except DuplicateDatabase:
+		print("La BBDD ya existe en el servidor, cancelando inicialización")
+
+
+
 def init_connection() -> None:
     global db_conn
     db_conn = db_driver.connect(
@@ -37,6 +57,7 @@ def recreate_db_structs(sql_script: str) -> None:
 
 def teardown_connection() -> None:
     global db_conn
+    if db_conn is None: return
     db_conn.commit()
     print("Modificaciones almacenadas correctamente")
     db_conn.close()
@@ -73,7 +94,7 @@ def del_client(nid: str) -> None:
             "DELETE FROM public.clients WHERE nid LIKE %s;",
             (nid,))
         cursor.close()
-    print("Cliente eliminado correctamente")
+    print("Operación realizada con éxito")
 
 
 def show_client(id: str = "") -> None:
@@ -94,7 +115,7 @@ def add_client_to_sport(nid: str, sport_name: str, sport_time: str) -> None:
             cursor.execute(
                 "INSERT INTO public.clients_sports(client_nid, sport_name, sport_time) VALUES (%s, %s, %s);", (nid, sport_name, sport_time))
             cursor.close()
-    except db_errors.ForeignKeyViolation:
+    except ForeignKeyViolation:
         print("El deporte/cliente no existe en su respectiva tabla", file=sys.stderr)
 
 
@@ -106,7 +127,7 @@ def del_client_from_sport(nid: str, sport_name: str) -> None:
                 "DELETE FROM public.clients_sports WHERE client_nid LIKE %s AND sport_name LIKE %s;",
                 (nid, sport_name))
             cursor.close()
-    except db_errors.ForeignKeyViolation:
+    except ForeignKeyViolation:
         print("El deporte/cliente no existe en su respectiva tabla", file=sys.stderr)
 
 
