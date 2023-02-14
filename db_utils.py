@@ -3,47 +3,56 @@ import sys
 from class_defs import *
 from psycopg2.extensions import connection
 import psycopg2 as db_driver
-from psycopg2.errors import DuplicateDatabase, ForeignKeyViolation
+from psycopg2.errors import DuplicateDatabase, ForeignKeyViolation, OperationalError, ForeignKeyViolation
 
 db_conn: connection = None
 
 
 # Init functions
 def init_db(sql_script: str) -> None:
-	print("Inicializando BBDD en el servidor...")
-	from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-	init_conn: connection = db_driver.connect(
-		host="localhost",
-        user="postgres",
-        password="admin123",
-        port="25432",
-	)
-	init_conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-	try:
-		with init_conn.cursor() as cursor:
-			cursor.execute(sql_script)
-			cursor.close()
-		print("Script de inicialización de la BBDD ejecutado con éxito")
-	except DuplicateDatabase:
-		print("La BBDD ya existe en el servidor, cancelando inicialización")
+    print("Inicializando BBDD en el servidor...")
+    init_conn = None
+    while init_conn is None:
+        from time import sleep
+        from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+        secs = 3
+        try:
+            init_conn: connection = db_driver.connect(
+                host="localhost",
+                user="postgres",
+                password="admin123",
+                port="25432",
+            )
+            init_conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            try:
+                with init_conn.cursor() as cursor:
+                    cursor.execute(sql_script)
+                    cursor.close()
+                print("Script de inicialización de la BBDD ejecutado con éxito")
+            except DuplicateDatabase:
+                print("La BBDD ya existe en el servidor, cancelando inicialización")
+        except OperationalError:
+            print(f"No se ha podido acceder a la BBDD con los credenciales asignados. Reintentando en {secs} segundos...")
+            sleep(secs)
 
 
 
 def init_connection() -> None:
     global db_conn
-    db_conn = db_driver.connect(
-        database="gym_db",
-        host="localhost",
-        user="postgres",
-        password="admin123",
-        port="25432",
-    )
-    assert db_conn
-    while db_conn.closed:
+    while db_conn is None:
         from time import sleep
         secs = 3
-        print(f"La conexion no se pudo establecer, reintentando en {secs} segundos")
-        sleep(secs)
+        try:
+            db_conn = db_driver.connect(
+                database="gym_db",
+                host="localhost",
+                user="postgres",
+                password="admin123",
+                port="25432",
+            )
+        except OperationalError:
+            print(f"No se ha podido acceder a la BBDD con los credenciales asignados. Reintentando en {secs} segundos...")
+            sleep(secs)
     print("Conexion establecida correctamente")
 
 
@@ -89,11 +98,14 @@ def add_client(client: Client) -> None:
 
 def del_client(nid: str) -> None:
     global db_conn
-    with db_conn.cursor() as cursor:
-        cursor.execute(
-            "DELETE FROM public.clients WHERE nid LIKE %s;",
-            (nid,))
-        cursor.close()
+    try:
+        with db_conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM public.clients WHERE nid LIKE %s;",
+                (nid,))
+            cursor.close()
+    except ForeignKeyViolation:
+        print("El cliente aún está dado de alta en un deporte. Debe ser desmatriculado antes de eliminarlo")
     print("Operación realizada con éxito")
 
 
@@ -141,5 +153,5 @@ def show_client_sports(nid: str) -> None:
             for cell in row:
                 print(cell)
         if not len(res):
-            print("No se ha seleccionado ningun cliente", file=sys.stderr)
+            print("El cliente no existe o no tiene asignado ningún deporte", file=sys.stderr)
         cursor.close()
